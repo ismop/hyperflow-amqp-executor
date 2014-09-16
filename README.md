@@ -14,6 +14,7 @@ Executor may be configured in two ways:
    * `AWS_SECRET_ACCESS_KEY` (for S3 cloud storage)
    * `AMQP_URL`
    * `THREADS` (defaults to number of cores or 1 if it couldn't be determined)
+   * `QUEUE_NAME` (defaults to "hyperflow.jobs")
 
 To execute jobs:
   
