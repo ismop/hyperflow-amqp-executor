@@ -77,7 +77,7 @@ module Executor
     def execute
       begin
         cmdline = "#{@job.executable} #{@job.args}"
-        Executor::logger.debug "[#{@id}] Executing #{cmdline}"
+        Executor::logger.debug "[#{@id}] Executing #{cmdline} at #{@workdir}"
         Open3.popen3(cmdline, chdir: @workdir) do |stdin, stdout, stderr, wait_thr|
           {exit_status: wait_thr.value.exitstatus, stderr: stderr.read, stdout: stdout.read} # Should use IO.select!, will break on large stdout/stderr
         end
