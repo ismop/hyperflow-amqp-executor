@@ -88,11 +88,21 @@ module Executor
     end
 
     def input_size
-      @job.inputs.map{ |file| begin File.size(@workdir+"/"+file.name) rescue 0 end }.reduce(:+)
+      #fix broken map in recursive-open-struct
+      begin
+        @job.inputs.map{ |file| begin File.size(@workdir+"/"+file.name) rescue 0 end }.reduce(:+)
+      rescue
+        0
+      end
     end
 
     def output_size
-      @job.outputs.map{ |file| begin File.size(@workdir+"/"+file.name) rescue 0 end }.reduce(:+)
+      #fix broken map in recursive-open-struct
+      begin
+        @job.outputs.map{ |file| begin File.size(@workdir+"/"+file.name) rescue 0 end }.reduce(:+)
+      rescue
+        0
+      end
     end
   end
 end
