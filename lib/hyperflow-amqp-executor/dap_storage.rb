@@ -1,10 +1,12 @@
 require_relative './measurement_fetcher'
+require_relative './result_writer'
 require_relative './local_storage'
 
 module Executor
   module DapStorage
     include Executor::LocalStorage
     include MeasurementFetcher
+    include ResultWriter
     def stage_in
       get(
          @job.options.context_id,
@@ -18,7 +20,14 @@ module Executor
     end
 
     def stage_out
-
+      write_result(
+          {
+              similarity: 0.1,
+              rank: 7,
+              threat_assessment_id: 1,
+              scenario_id: @job.options.scenario_id
+          }
+      )
     end
 
     def private_token
