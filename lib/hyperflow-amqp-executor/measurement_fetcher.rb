@@ -1,9 +1,10 @@
 require 'fileutils'
-require 'faraday'
 require 'json'
 require 'date'
+require_relative './dap_client'
 
 module MeasurementFetcher
+  include DapClient
 
   def get(ctx_id, scenario_id, profile_id, from, to, file_name_prefix = '', working_dir = '/tmp/')
     init_connection unless @conn
@@ -53,10 +54,6 @@ module MeasurementFetcher
   end
 
   private
-
-  def init_connection
-    @conn = Faraday.new(url: dap_base_url, ssl:{verify: false})
-  end
 
   def write_measurements(dev, p_measurements, t_measurements, fname_prefix, working_dir, scenario)
     unless Dir.exist?(working_dir)
