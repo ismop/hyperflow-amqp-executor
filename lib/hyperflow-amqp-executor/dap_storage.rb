@@ -18,7 +18,7 @@ module Executor
          @job.options.measurements_path
       )
       if Dir.exist? @job.options.measurements_path
-        @job.args = Dir["#{@job.options.measurements_path}/*"].join(',')
+        @job.args = Dir["-if #{@job.options.measurements_path}/*"].join(',')
       end
     end
 
