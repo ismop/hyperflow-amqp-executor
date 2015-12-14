@@ -1,0 +1,2 @@
+Co godzina uruchamiamy obliczenia dla ostatnich 24h
+uruchamiamy job dla każdego profilu.
