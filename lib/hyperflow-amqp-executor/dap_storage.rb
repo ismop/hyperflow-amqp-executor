@@ -41,8 +41,9 @@ module Executor
       # how to parse similarity and rank out of above?
       write_result(
           {
-              similarity: 0.1,
+              similarity: 0.1, # avg(6.77361, 2.62513)
               rank: 7,
+              payload: "RANK 1: simulation 3:\nSensor no 0: 6.77361 (offset: 27) sim. status: -1\nSensor no 2: 2.62513 (offset: 882) sim. status: -1",
               threat_assessment_id: @job.options.threat_assessment_id,
               scenario_id: @job.options.scenario_id
           }
