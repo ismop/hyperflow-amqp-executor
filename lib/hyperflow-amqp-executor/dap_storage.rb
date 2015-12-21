@@ -25,29 +25,60 @@ module Executor
     def stage_out
       puts "Job outpust #{@job.outputs}"
       # comparing.bin -if data/pomiary/UT6.csv,data/pomiary/UT7.csv,data/pomiary/UT8.csv
-      # RANK 1: simulation 3:
-      # Sensor no 0: 6.77361 (offset: 27) sim. status: -1
-      # Sensor no 2: 2.62513 (offset: 882) sim. status: -1
-      # RANK 2: simulation 23:
-      # Sensor no 0: 7.31727 (offset: 795) sim. status: -1
-      # Sensor no 2: 2.50500 (offset: 146) sim. status: -1
-      # RANK 3: simulation 1:
-      # Sensor no 0: 7.57490 (offset: 136) sim. status: -1
-      # Sensor no 2: 2.64121 (offset: 250) sim. status: -1
-      # RANK 4: simulation 30:
-      # Sensor no 0: 8.55535 (offset: 51) sim. status: -1
-      # Sensor no 2: 3.51746 (offset: 135) sim. status: -1
+
+      begin
+        results = (job_output.split(/^RANK/)) - ['']
+        results.each do |result|
+          rank = result.match(/^ \d+/)[0].to_i
+          similarities = result.split("\n").collect do |s|
+            md=s.match(/\d+\.\d+/)
+            md ? md[0].to_f : nil
+          end.compact
+          similarity = similarities.inject {|sum, el| sum += el} / similarities.size
+          write_result(
+              {
+                  similarity: similarity,
+                  rank: rank,
+                  payload: 'RANK' + result,
+                  threat_assessment_id: @job.options.threat_assessment_id,
+                  scenario_id: @job.options.scenario_id
+              }
+          )
+        end
+      rescue
+        write_result(
+              {
+                  similarity: -1,
+                  rank: -1,
+                  payload: $!.message,
+                  threat_assessment_id: @job.options.threat_assessment_id,
+                  scenario_id: @job.options.scenario_id
+              }
+          )
+      end
 
       # how to parse similarity and rank out of above?
-      write_result(
-          {
-              similarity: 0.1, # avg(6.77361, 2.62513)
-              rank: 7,
-              payload: "RANK 1: simulation 3:\nSensor no 0: 6.77361 (offset: 27) sim. status: -1\nSensor no 2: 2.62513 (offset: 882) sim. status: -1",
-              threat_assessment_id: @job.options.threat_assessment_id,
-              scenario_id: @job.options.scenario_id
-          }
-      )
+
+
+
+
+
+
+    end
+
+    def job_output
+      "RANK 1: simulation 3:\n"\
+      "Sensor no 0: 6.77361 (offset: 27) sim. status: -1\n"\
+      "Sensor no 2: 2.62513 (offset: 882) sim. status: -1\n"\
+      "RANK 2: simulation 23:\n"\
+      "Sensor no 0: 7.31727 (offset: 795) sim. status: -1\n"\
+      "Sensor no 2: 2.50500 (offset: 146) sim. status: -1\n"\
+      "RANK 3: simulation 1:\n"\
+      "Sensor no 0: 7.57490 (offset: 136) sim. status: -1\n"\
+      "Sensor no 2: 2.64121 (offset: 250) sim. status: -1\n"\
+      "RANK 4: simulation 30:\n"\
+      "Sensor no 0: 8.55535 (offset: 51) sim. status: -1\n"\
+      "Sensor no 2: 3.51746 (offset: 135) sim. status: -1\n"
     end
 
     def private_token
