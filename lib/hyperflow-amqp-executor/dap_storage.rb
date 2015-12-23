@@ -71,7 +71,7 @@ module Executor
     end
 
     def job_output
-      @job.outputs[:std_out] || ''
+      @job.std_out || ''
       # "RANK 1: simulation 3:\n"\
       # "Sensor no 0: 6.77361 (offset: 27) sim. status: -1\n"\
       # "Sensor no 2: 2.62513 (offset: 882) sim. status: -1\n"\
