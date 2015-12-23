@@ -23,10 +23,10 @@ module Executor
     end
 
     def stage_out
-      puts "Job outputs #{@job.outputs}"
+      #puts "Job outputs #{@job.outputs}"
       # comparing.bin -if data/pomiary/UT6.csv,data/pomiary/UT7.csv,data/pomiary/UT8.csv
-
-      if @job.outputs == nil
+      output = job_output
+      if job_output == ''
         write_result(
             {
                 similarity: -1,
@@ -38,7 +38,7 @@ module Executor
         )
       else
         begin
-          results = (@job.outputs.split(/^RANK/)) - ['']
+          results = (output.split(/^RANK/)) - ['']
           results.each do |result|
             rank = result.match(/^ \d+/)[0].to_i
             similarities = result.split("\n").collect do |s|
@@ -68,30 +68,22 @@ module Executor
             )
         end
       end
-
-
-      # how to parse similarity and rank out of above?
-
-
-
-
-
-
     end
 
     def job_output
-      "RANK 1: simulation 3:\n"\
-      "Sensor no 0: 6.77361 (offset: 27) sim. status: -1\n"\
-      "Sensor no 2: 2.62513 (offset: 882) sim. status: -1\n"\
-      "RANK 2: simulation 23:\n"\
-      "Sensor no 0: 7.31727 (offset: 795) sim. status: -1\n"\
-      "Sensor no 2: 2.50500 (offset: 146) sim. status: -1\n"\
-      "RANK 3: simulation 1:\n"\
-      "Sensor no 0: 7.57490 (offset: 136) sim. status: -1\n"\
-      "Sensor no 2: 2.64121 (offset: 250) sim. status: -1\n"\
-      "RANK 4: simulation 30:\n"\
-      "Sensor no 0: 8.55535 (offset: 51) sim. status: -1\n"\
-      "Sensor no 2: 3.51746 (offset: 135) sim. status: -1\n"
+      @job.outputs[:std_out] || ''
+      # "RANK 1: simulation 3:\n"\
+      # "Sensor no 0: 6.77361 (offset: 27) sim. status: -1\n"\
+      # "Sensor no 2: 2.62513 (offset: 882) sim. status: -1\n"\
+      # "RANK 2: simulation 23:\n"\
+      # "Sensor no 0: 7.31727 (offset: 795) sim. status: -1\n"\
+      # "Sensor no 2: 2.50500 (offset: 146) sim. status: -1\n"\
+      # "RANK 3: simulation 1:\n"\
+      # "Sensor no 0: 7.57490 (offset: 136) sim. status: -1\n"\
+      # "Sensor no 2: 2.64121 (offset: 250) sim. status: -1\n"\
+      # "RANK 4: simulation 30:\n"\
+      # "Sensor no 0: 8.55535 (offset: 51) sim. status: -1\n"\
+      # "Sensor no 2: 3.51746 (offset: 135) sim. status: -1\n"
     end
 
     def private_token
