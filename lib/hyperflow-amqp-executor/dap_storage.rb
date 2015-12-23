@@ -36,39 +36,39 @@ module Executor
                 scenario_id: @job.options.scenario_id
             }
         )
-      end
-
-
-      begin
-        results = (job_output.split(/^RANK/)) - ['']
-        results.each do |result|
-          rank = result.match(/^ \d+/)[0].to_i
-          similarities = result.split("\n").collect do |s|
-            md=s.match(/\d+\.\d+/)
-            md ? md[0].to_f : nil
-          end.compact
-          similarity = similarities.inject {|sum, el| sum += el} / similarities.size
+      else
+        begin
+          results = (@job.outputs.split(/^RANK/)) - ['']
+          results.each do |result|
+            rank = result.match(/^ \d+/)[0].to_i
+            similarities = result.split("\n").collect do |s|
+              md=s.match(/\d+\.\d+/)
+              md ? md[0].to_f : nil
+            end.compact
+            similarity = similarities.inject {|sum, el| sum += el} / similarities.size
+            write_result(
+                {
+                    similarity: similarity,
+                    rank: rank,
+                    payload: 'RANK' + result,
+                    threat_assessment_id: @job.options.threat_assessment_id,
+                    scenario_id: @job.options.scenario_id
+                }
+            )
+          end
+        rescue
           write_result(
-              {
-                  similarity: similarity,
-                  rank: rank,
-                  payload: 'RANK' + result,
-                  threat_assessment_id: @job.options.threat_assessment_id,
-                  scenario_id: @job.options.scenario_id
-              }
-          )
+                {
+                    similarity: -1,
+                    rank: -1,
+                    payload: $!.message,
+                    threat_assessment_id: @job.options.threat_assessment_id,
+                    scenario_id: @job.options.scenario_id
+                }
+            )
         end
-      rescue
-        write_result(
-              {
-                  similarity: -1,
-                  rank: -1,
-                  payload: $!.message,
-                  threat_assessment_id: @job.options.threat_assessment_id,
-                  scenario_id: @job.options.scenario_id
-              }
-          )
       end
+
 
       # how to parse similarity and rank out of above?
 
