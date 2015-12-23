@@ -30,7 +30,7 @@ module Executor
         write_result(
             {
                 similarity: -1,
-                rank: -1,
+                rank: 1000000,
                 payload: 'Current state could not be compared to any known scenario',
                 threat_assessment_id: @job.options.threat_assessment_id,
                 scenario_id: @job.options.scenario_id
