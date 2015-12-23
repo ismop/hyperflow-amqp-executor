@@ -23,8 +23,21 @@ module Executor
     end
 
     def stage_out
-      puts "Job outpust #{@job.outputs}"
+      puts "Job outputs #{@job.outputs}"
       # comparing.bin -if data/pomiary/UT6.csv,data/pomiary/UT7.csv,data/pomiary/UT8.csv
+
+      if @job.outputs == nil
+        write_result(
+            {
+                similarity: -1,
+                rank: -1,
+                payload: 'Current state could not be compared to any known scenario',
+                threat_assessment_id: @job.options.threat_assessment_id,
+                scenario_id: @job.options.scenario_id
+            }
+        )
+      end
+
 
       begin
         results = (job_output.split(/^RANK/)) - ['']
