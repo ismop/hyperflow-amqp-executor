@@ -81,11 +81,28 @@ module MeasurementFetcher
   end
 
   def devices_for_profile(profile_id)
+    devices_str = devices_for_profile_from_cache(profile_id) ||
+        devices_for_profile_from_dap(profile_id)
+    JSON.parse(devices_str)['devices']
+  end
+  
+  def devices_for_profile_from_cache(profile_id)
+    cache_file_name = "/tmp/device_cache_for_profile_#{profile_id}"
+    File.exist?(cache_file_name) ? IO.read(cache_file_name) : nil
+  end
+
+  def write_devices_cache(profile_id, devices)
+    cache_file_name = "/tmp/device_cache_for_profile_#{profile_id}"
+    IO.write(cache_file_name, devices)
+  end
+
+  def devices_for_profile_from_dap(profile_id)
     devices_resp = @conn.get(
         "/api/v1/devices?profile_id=#{profile_id}",
         { private_token: private_token }
     ).body
-    JSON.parse(devices_resp)['devices']
+    write_devices_cache(profile_id, devices_resp)
+    devices_resp
   end
 
   def devices(ids)
