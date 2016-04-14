@@ -81,19 +81,14 @@ module MeasurementFetcher
   end
 
   def devices_for_profile(profile_id)
-    devices_str = devices_for_profile_from_cache(profile_id) ||
+    devices_str = read_from_cache("device_cache_for_profile_#{profile_id}") ||
         devices_for_profile_from_dap(profile_id)
     JSON.parse(devices_str)['devices']
   end
-  
-  def devices_for_profile_from_cache(profile_id)
-    cache_file_name = "/tmp/device_cache_for_profile_#{profile_id}"
-    File.exist?(cache_file_name) ? IO.read(cache_file_name) : nil
-  end
 
-  def write_devices_cache(profile_id, devices)
-    cache_file_name = "/tmp/device_cache_for_profile_#{profile_id}"
-    IO.write(cache_file_name, devices)
+  def read_from_cache(file_name)
+    cache_file_name = "/tmp/#{file_name}"
+    File.exist?(cache_file_name) ? IO.read(cache_file_name) : nil
   end
 
   def devices_for_profile_from_dap(profile_id)
@@ -101,16 +96,8 @@ module MeasurementFetcher
         "/api/v1/devices?profile_id=#{profile_id}",
         { private_token: private_token }
     ).body
-    write_devices_cache(profile_id, devices_resp)
+    write_cache("device_cache_for_profile_#{profile_id}", devices_resp)
     devices_resp
-  end
-
-  def devices(ids)
-    devices_resp = @conn.get(
-        "/api/v1/devices?device_aggregation_id=#{ids.join(',')}",
-        { private_token: private_token }
-    ).body
-    JSON.parse(devices_resp)['devices']
   end
 
   def select_param_of_type(parameters, param_type)
@@ -119,22 +106,43 @@ module MeasurementFetcher
     end.first
   end
 
+  def write_cache(file_name, content)
+    cache_file_name = "/tmp/#{file_name}"
+    IO.write(cache_file_name, content)
+  end
+
   def parameters(parameter_ids)
-    parameters_resp = @conn.get(
-        "/api/v1/parameters?id=#{parameter_ids.join(',')}",
-        {private_token: private_token}
-    ).body
+    parameters_resp =
+      read_from_cache("parameter_cache_for_ids_#{parameter_ids}") ||
+      parameters_from_dap(parameter_ids)
     JSON.parse(parameters_resp)['parameters']
   end
 
+  def parameters_from_dap(parameter_ids)
+    parameters_resp = @conn.get(
+      "/api/v1/parameters?id=#{parameter_ids.join(',')}",
+      {private_token: private_token}
+    ).body
+    write_cache "parameter_cache_for_ids_#{parameter_ids}", parameters_resp
+    parameters_resp
+  end
+
   def timeline(ctx_id, scenario_id, parameter_id)
-    pt_resp = @conn.get(
+    timeline_resp =
+      read_from_cache("timeline_cache_for_ctx_#{ctx_id}_for_scenario_#{scenario_id}_for_parameter_#{parameter_id}") ||
+      timeline_from_dap(ctx_id, scenario_id, parameter_id)
+    JSON.parse(timeline_resp)['timelines'].first
+  end
+
+  def timeline_from_dap(ctx_id, scenario_id, parameter_id)
+    timeline_resp = @conn.get(
         "/api/v1/timelines?parameter_id=#{parameter_id}"\
         "&context_id=#{ctx_id}"\
         "#{"&scenario_id=#{scenario_id}" if scenario_id}",
         {private_token: private_token}
     ).body
-    JSON.parse(pt_resp)['timelines'].first
+    write_cache("timeline_cache_for_ctx_#{ctx_id}_for_scenario_#{scenario_id}_for_parameter_#{parameter_id}", timeline_resp)
+    timeline_resp
   end
 
   def temperature_measurements(timeline_id, from, to)
