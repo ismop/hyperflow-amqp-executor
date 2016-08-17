@@ -25,49 +25,41 @@ module Executor
     def stage_out
       #puts "Job outputs #{@job.outputs}"
       # comparing.bin -if data/pomiary/UT6.csv,data/pomiary/UT7.csv,data/pomiary/UT8.csv
-      output = job_output
-      if job_output == ''
-        write_result(
-            {
-                similarity: -1,
-                rank: 1000000,
-                payload: 'Current state could not be compared to any known scenario',
-                threat_assessment_id: @job.options.threat_assessment_id,
-                scenario_id: @job.options.scenario_id
-            }
-        )
+
+      exit_code = @job.exit_code
+      ta_state = nil
+      if (exit_code != 0)
+        ta_state = :error
       else
-        begin
-          results = (output.split(/^RANK/)) - ['']
-          results.each do |result|
-            rank = result.match(/^ \d+/)[0].to_i
-            similarities = result.split("\n").collect do |s|
-              md=s.match(/\d+\.\d+/)
-              md ? md[0].to_f : nil
-            end.compact
-            similarity = similarities.inject {|sum, el| sum += el} / similarities.size
-            write_result(
-                {
-                    similarity: similarity,
-                    rank: rank,
-                    payload: 'RANK' + result,
-                    threat_assessment_id: @job.options.threat_assessment_id,
-                    scenario_id: @job.options.scenario_id
-                }
-            )
+        ta_state = :finished
+        output = job_output
+        if job_output != ''
+          begin
+            results = (output.split(/^RANK/)) - ['']
+            results.each do |result|
+              rank = result.match(/^ \d+/)[0].to_i
+              similarities = result.split("\n").collect do |s|
+                md=s.match(/\d+\.\d+/)
+                md ? md[0].to_f : nil
+              end.compact
+              similarity = similarities.inject {|sum, el| sum += el} / similarities.size
+              write_result(
+                  {
+                      similarity: similarity,
+                      rank: rank,
+                      payload: 'RANK' + result,
+                      threat_assessment_id: @job.options.threat_assessment_id,
+                      scenario_id: @job.options.scenario_id
+                  }
+              )
+            end
+          rescue
+            logger.error $!.message
+            ta_state = :error
           end
-        rescue
-          write_result(
-                {
-                    similarity: -1,
-                    rank: -1,
-                    payload: $!.message,
-                    threat_assessment_id: @job.options.threat_assessment_id,
-                    scenario_id: @job.options.scenario_id
-                }
-            )
         end
       end
+      update_threat_assessment_state(@job.options.threat_assessment_id, ta_state)
     end
 
     def job_output
