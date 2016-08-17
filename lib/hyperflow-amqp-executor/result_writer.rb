@@ -13,4 +13,14 @@ module ResultWriter
       req.body = result.to_json
     end
   end
+
+  def update_threat_assessment_state(threat_assessment_id, state)
+    init_connection unless @conn
+    @conn.put do |req|
+      req.url "/api/v1/threat_assessments/#{threat_assessment_id}"
+      req.headers['PRIVATE-TOKEN'] = private_token
+      req.headers['Content-Type'] = 'application/json'
+      req.body = {status: state}.to_json
+    end
+  end
 end
