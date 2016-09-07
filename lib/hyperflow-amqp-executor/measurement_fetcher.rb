@@ -45,7 +45,7 @@ module MeasurementFetcher
       working_dir << '/' unless working_dir.end_with? '/'
 
       scenario = !scenario_id.nil?
-
+      file_name_prefix = 'scen_' if scenario
       write_measurements(
           dev, press_measurements, temp_measurements,
           file_name_prefix, working_dir, scenario
