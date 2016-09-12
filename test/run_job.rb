@@ -19,7 +19,7 @@ class RunJob < Test::Unit::TestCase
             filename_prefix: nil,
             measurements_path: "/tmp/measurements/#{Time.now.to_i}",
             threat_assessment_id: 1,
-            scenario_ids: [142,144,143] # ids in dap-dev
+            scenario_ids: [203,204,205] # ids in dap-dev
         }
     }
 
