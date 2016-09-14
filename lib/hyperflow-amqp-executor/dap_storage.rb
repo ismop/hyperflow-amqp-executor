@@ -85,7 +85,7 @@ module Executor
     end
 
     def dap_base_url
-      ENV['DAP_BASE_URL'] || 'https://dap.moc.ismop.edu.pl'
+      ENV['DAP_BASE_URL'] || 'https://dap-dev.moc.ismop.edu.pl'
     end
 
     private
@@ -93,8 +93,9 @@ module Executor
     def download_scenarios
       scenario_ids = @job.options.scenario_ids || []
       scenario_ids.each do |scenario_id|
+        puts "Downloading scenario #{scenario_id}"
         get(
-           @job.options.context_id,
+           2, # scenarios share ctx with id = 2 :-)
            scenario_id,
            @job.options.profile_id,
            @job.options.time_from,

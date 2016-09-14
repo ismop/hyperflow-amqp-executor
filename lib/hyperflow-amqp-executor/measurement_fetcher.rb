@@ -7,9 +7,17 @@ module MeasurementFetcher
   include DapClient
 
   def get(ctx_id, scenario_id, profile_id, from, to, file_name_prefix = '', working_dir = '/tmp/')
+    scenario = !scenario_id.nil?
+    if scenario
+      working_dir = Dir.home + '/data/symulacje/'
+      file_name_prefix = "scen_#{scenario_id}_"
+    end
     init_connection unless @conn
     devices = devices_for_profile(profile_id)
     devices.each do |dev|
+      next if scenario && scenario_downloaded?(working_dir, file_name_prefix, dev['custom_id'])
+
+
       parameter_ids = dev['parameter_ids']
       next if parameter_ids.size == 0
       parameters = parameters(parameter_ids)
@@ -33,10 +41,18 @@ module MeasurementFetcher
       next unless press_tl
       press_tl_id = press_tl['id']
 
-      temp_measurements = temperature_measurements(temp_tl_id, from, to)
+      temp_measurements = if scenario
+                            temperature_measurements(temp_tl_id)
+                          else
+                              temperature_measurements(temp_tl_id, from, to)
+                          end
       next unless temp_measurements
 
-      press_measurements = pressure_measurements(press_tl_id, from, to)
+      press_measurements = if scenario
+                             pressure_measurements(press_tl_id)
+                           else
+                             pressure_measurements(press_tl_id, from, to)
+                           end
       next unless press_measurements
 
       next if (temp_measurements.size == 0 || press_measurements.size == 0)
@@ -44,13 +60,16 @@ module MeasurementFetcher
 
       working_dir << '/' unless working_dir.end_with? '/'
 
-      scenario = !scenario_id.nil?
-      file_name_prefix = 'scen_' if scenario
       write_measurements(
           dev, press_measurements, temp_measurements,
           file_name_prefix, working_dir, scenario
       )
     end
+  end
+
+  def scenario_downloaded?(working_dir, fname_prefix, custom_id)
+    file_name = "#{working_dir}#{fname_prefix}#{custom_id}.csv"
+    File.exist? file_name
   end
 
   private
@@ -145,7 +164,7 @@ module MeasurementFetcher
     timeline_resp
   end
 
-  def temperature_measurements(timeline_id, from, to)
+  def temperature_measurements(timeline_id, from = nil, to = nil)
     temp_measurements_resp = @conn.get(
         "/api/v1/measurements?timeline_id=#{timeline_id}"\
         "#{"&time_from=#{from}" if from}"\
@@ -155,7 +174,7 @@ module MeasurementFetcher
     JSON.parse(temp_measurements_resp)['measurements']
   end
 
-  def pressure_measurements(timeline_id, from, to)
+  def pressure_measurements(timeline_id, from = nil, to = nil)
     press_measurements_resp = @conn.get(
         "/api/v1/measurements?timeline_id=#{timeline_id}"\
         "#{"&time_from=#{from}" if from}"\
