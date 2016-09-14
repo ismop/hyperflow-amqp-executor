@@ -8,9 +8,11 @@ module Executor
     include MeasurementFetcher
     include ResultWriter
     def stage_in
+      download_scenarios
+
       get(
          @job.options.context_id,
-         @job.options.scenario_id,
+         nil, # scenario_id = nil because we fetch real data
          @job.options.profile_id,
          @job.options.time_from,
          @job.options.time_to,
@@ -83,7 +85,25 @@ module Executor
     end
 
     def dap_base_url
-      ENV['DAP_BASE_URL'] || 'https://dap.moc.ismop.edu.pl'
+      ENV['DAP_BASE_URL'] || 'https://dap-dev.moc.ismop.edu.pl'
+    end
+
+    private
+
+    def download_scenarios
+      scenario_ids = @job.options.scenario_ids || []
+      scenario_ids.each do |scenario_id|
+        puts "Downloading scenario #{scenario_id}"
+        get(
+           2, # scenarios share ctx with id = 2 :-)
+           scenario_id,
+           @job.options.profile_id,
+           @job.options.time_from,
+           @job.options.time_to,
+           @job.options.filename_prefix,
+           @job.options.measurements_path
+        )
+      end
     end
 
   end
